@@ -1,0 +1,28 @@
+apiVersion: v2
+name: content-manager
+description: A comprehensive content management system with multi-tenancy and configurable storage
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://github.com/your-org/content-manager
+sources:
+  - https://github.com/your-org/content-manager
+maintainers:
+  - name: Content Manager Team
+    email: team@example.com
+keywords:
+  - content-management
+  - file-storage
+  - multi-tenant
+  - azure-ad
+  - fastapi
+  - react
+dependencies:
+  - name: postgresql
+    version: 12.12.10
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: 18.1.5
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled 

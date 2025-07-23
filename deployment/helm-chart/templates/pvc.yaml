@@ -1,0 +1,25 @@
+{{- if .Values.persistence.uploads.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "content-manager.fullname" . }}-uploads
+  labels:
+    {{- include "content-manager.labels" . | nindent 4 }}
+  {{- with .Values.persistence.uploads.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.uploads.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.uploads.size | quote }}
+  {{- if .Values.persistence.uploads.storageClass }}
+  {{- if (eq "-" .Values.persistence.uploads.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: "{{ .Values.persistence.uploads.storageClass }}"
+  {{- end }}
+  {{- end }}
+{{- end }} 

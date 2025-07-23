@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: contentmanager
+      POSTGRES_USER: contentmanager
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - content-manager
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - content-manager
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://contentmanager:changeme@postgres:5432/contentmanager
+      - SECRET_KEY=dev-secret-key-change-in-production
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - STORAGE_TYPE=local
+      - LOCAL_STORAGE_PATH=/app/uploads
+      - CORS_ORIGINS=http://localhost:3000
+      - ENABLE_MULTI_TENANCY=true
+      - DEFAULT_TENANT_ID=default
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - content-manager
+    command: ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: builder
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_BASE_URL=http://localhost:8000/api/v1
+      - REACT_APP_AZURE_CLIENT_ID=your-client-id
+      - REACT_APP_AZURE_TENANT_ID=your-tenant-id
+      - REACT_APP_AZURE_AUTHORITY=https://login.microsoftonline.com/your-tenant-id
+      - REACT_APP_REDIRECT_URI=http://localhost:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - content-manager
+    command: ["npm", "start"]
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - content-manager
+    profiles:
+      - proxy
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+
+networks:
+  content-manager:
+    driver: bridge 
