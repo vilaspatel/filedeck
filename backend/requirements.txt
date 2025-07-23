@@ -37,7 +37,7 @@ xmltodict==0.13.0
 # Utilities
 python-dotenv==1.0.0
 structlog==23.2.0
-rich==13.7.0
+rich==14.0.0
 tenacity==8.2.3
 
 # Development & Testing
