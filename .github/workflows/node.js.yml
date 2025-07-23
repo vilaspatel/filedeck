@@ -29,4 +29,5 @@ jobs:
         cache-dependency-path: 'frontend'
     - run: |
          cd frontend
+         npm install
          npm ci 
